@@ -109,7 +109,7 @@ public class PlayerChestData extends SavedData {
             ItemStack stack = (in == null) ? ItemStack.EMPTY : in;
             DataResult<Tag> res = ItemStack.CODEC.encodeStart(ops, stack);
             Tag tag = res.result().orElseGet(CompoundTag::new);
-            if (!(tag instanceof CompoundTag ct)) {
+            if (!(tag instanceof CompoundTag)) {
                 CompoundTag wrap = new CompoundTag();
                 wrap.put("stack", tag);
                 tag = wrap;
