@@ -1,0 +1,5 @@
+{
+  "itemGroup.instanced_loot": "Example Mod Tab",
+  "block.instanced_loot.example_block": "Example Block",
+  "item.instanced_loot.example_item": "Example Item"
+}
