@@ -20,11 +20,11 @@ import java.util.List;
 public record LogicalContainer(ResourceKey<Level> dim, BlockPos mainPos, int size, Component displayName,
                                List<RandomizableContainerBlockEntity> parts) {
 
-    public static LogicalContainer of(Level level, BlockPos pos, BlockState state, RandomizableContainerBlockEntity be) {
-        if (be instanceof BarrelBlockEntity barrel) {
+    public static LogicalContainer of(Level level, BlockPos pos, BlockState state, RandomizableContainerBlockEntity rcbe) {
+        if (rcbe instanceof BarrelBlockEntity barrel) {
             return new LogicalContainer(level.dimension(), pos, 27, Component.translatable("container.barrel"), List.of(barrel));
         }
-        if (be instanceof ChestBlockEntity chest) {
+        if (rcbe instanceof ChestBlockEntity chest) {
             ChestType type = state.getValue(ChestBlock.TYPE);
             if (type == ChestType.SINGLE) {
                 return new LogicalContainer(level.dimension(), pos, 27, state.getBlock().getName(), List.of(chest));
@@ -45,11 +45,11 @@ public record LogicalContainer(ResourceKey<Level> dim, BlockPos mainPos, int siz
         return this.dim.location().toString() + "|" + this.mainPos.toString();
     }
 
-    public void notifyStartOpen(Player p) {
-        for (RandomizableContainerBlockEntity be : parts) be.startOpen(p);
+    public void notifyStartOpen(Player player) {
+        for (RandomizableContainerBlockEntity be : parts) be.startOpen(player);
     }
-    public void notifyStopOpen(Player p) {
-        for (RandomizableContainerBlockEntity be : parts) be.stopOpen(p);
+    public void notifyStopOpen(Player player) {
+        for (RandomizableContainerBlockEntity be : parts) be.stopOpen(player);
     }
 
     public int rows() {

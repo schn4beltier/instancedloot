@@ -15,14 +15,14 @@ import net.schn4beltier.instanced_loot.feature.data.PlayerChestData;
 @EventBusSubscriber(modid = Instanced_loot.MODID)
 public class ChestCleanup {
     @SubscribeEvent
-    public static void onBreak(BlockEvent.BreakEvent e) {
-        if (!(e.getLevel() instanceof ServerLevel level)) return;
-        BlockPos pos = e.getPos();
+    public static void onBreak(BlockEvent.BreakEvent event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        BlockPos pos = event.getPos();
         BlockState state = level.getBlockState(pos);
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof RandomizableContainerBlockEntity rcbe))return;
-        LogicalContainer lc = LogicalContainer.of(level, pos, state, rcbe);
-        if (lc != null) PlayerChestData.get(level).remove(lc.globalId());
+        LogicalContainer logicalContainer = LogicalContainer.of(level, pos, state, rcbe);
+        if (logicalContainer != null) PlayerChestData.get(level).remove(logicalContainer.globalId());
     }
 }
 

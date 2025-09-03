@@ -60,57 +60,55 @@ public class PlayerChestData extends SavedData {
         if (data.remove(containerId) != null) setDirty();
     }
 
-    private static PlayerChestData fromNbt(CompoundTag tag) {
-        PlayerChestData d = new PlayerChestData();
-        ListTag containers = tag.getList(KEY_CONTAINERS).isPresent() ? tag.getList(KEY_CONTAINERS).get() : null;
+    private static PlayerChestData fromNbt(CompoundTag cTag) {
+        PlayerChestData data = new PlayerChestData();
+        ListTag containers = cTag.getList(KEY_CONTAINERS).isPresent() ? cTag.getList(KEY_CONTAINERS).get() : null;
         if (containers == null)return null;
-        for (Tag t : containers) {
-            CompoundTag c = (CompoundTag) t;
-            String id = c.getString(KEY_ID).isPresent() ? c.getString(KEY_ID).get() : null;
-            ListTag players = c.getList(KEY_PLAYERS).isPresent() ? c.getList(KEY_PLAYERS).get() : null;
+        for (Tag tag : containers) {
+            CompoundTag compoundTag = (CompoundTag) tag;
+            String id = compoundTag.getString(KEY_ID).isPresent() ? compoundTag.getString(KEY_ID).get() : null;
+            ListTag players = compoundTag.getList(KEY_PLAYERS).isPresent() ? compoundTag.getList(KEY_PLAYERS).get() : null;
             if (players == null) continue;
             Map<String, ListTag> map = new HashMap<>();
-            for (Tag pt : players) {
-                CompoundTag pc = (CompoundTag) pt;
-                String u = pc.getStringOr(KEY_UUID, "null");
-                ListTag inv = pc.getList(KEY_ITEMS).isPresent() ? pc.getList(KEY_ITEMS).get() : null;
-                map.put(u, inv);
+            for (Tag playerTag : players) {
+                CompoundTag playerCompoundTag = (CompoundTag) playerTag;
+                String uuid = playerCompoundTag.getStringOr(KEY_UUID, "null");
+                ListTag inv = playerCompoundTag.getList(KEY_ITEMS).isPresent() ? playerCompoundTag.getList(KEY_ITEMS).get() : null;
+                map.put(uuid, inv);
             }
-            d.data.put(id, map);
+            data.data.put(id, map);
         }
-        return d;
+        return data;
     }
 
     private CompoundTag toNbt() {
         CompoundTag tag = new CompoundTag();
         ListTag containers = new ListTag();
         data.forEach((id, byPlayer) -> {
-            CompoundTag c = new CompoundTag();
-            c.putString(KEY_ID, id);
+            CompoundTag cTag = new CompoundTag();
+            cTag.putString(KEY_ID, id);
             ListTag players = new ListTag();
             byPlayer.forEach((uuid, inv) -> {
-                CompoundTag pc = new CompoundTag();
-                pc.putString(KEY_UUID, uuid);
-                pc.put(KEY_ITEMS, inv.copy());
-                players.add(pc);
+                CompoundTag playerTag = new CompoundTag();
+                playerTag.putString(KEY_UUID, uuid);
+                playerTag.put(KEY_ITEMS, inv.copy());
+                players.add(playerTag);
             });
-            c.put(KEY_PLAYERS, players);
-            containers.add(c);
+            cTag.put(KEY_PLAYERS, players);
+            containers.add(cTag);
         });
         tag.put(KEY_CONTAINERS, containers);
         return tag;
     }
 
-    // ---- ItemStack <-> ListTag ----
     private static ListTag writeInv(ItemStack[] stacks, HolderLookup.Provider regs) {
         ListTag list = new ListTag();
         DynamicOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, regs);
 
         for (ItemStack in : stacks) {
-            ItemStack s = (in == null) ? ItemStack.EMPTY : in;
-            DataResult<Tag> res = ItemStack.CODEC.encodeStart(ops, s);
-            Tag tag = res.result().orElseGet(CompoundTag::new); // fallback leeres Compound
-            // Optional: immer ein Compound wollen? Dann casten oder konvertieren:
+            ItemStack stack = (in == null) ? ItemStack.EMPTY : in;
+            DataResult<Tag> res = ItemStack.CODEC.encodeStart(ops, stack);
+            Tag tag = res.result().orElseGet(CompoundTag::new);
             if (!(tag instanceof CompoundTag ct)) {
                 CompoundTag wrap = new CompoundTag();
                 wrap.put("stack", tag);
@@ -126,11 +124,10 @@ public class PlayerChestData extends SavedData {
         ItemStack[] out = new ItemStack[list.size()];
 
         for (int i = 0; i < list.size(); i++) {
-            Tag t = list.get(i);
-            // Falls du oben „wrap“ benutzt hast:
-            if (t instanceof CompoundTag ct && ct.contains("stack")) t = ct.get("stack");
+            Tag tag = list.get(i);
+            if (tag instanceof CompoundTag cTag && cTag.contains("stack")) tag = cTag.get("stack");
 
-            out[i] = ItemStack.CODEC.parse(ops, t)
+            out[i] = ItemStack.CODEC.parse(ops, tag)
                     .result()
                     .orElse(ItemStack.EMPTY);
         }
