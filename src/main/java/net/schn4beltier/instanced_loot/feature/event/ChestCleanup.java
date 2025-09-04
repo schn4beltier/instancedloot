@@ -119,9 +119,8 @@ public class ChestCleanup {
     private static void dropPlayerLoot(Player player, BlockPos pos) {
         ServerLevel level = (ServerLevel) player.level();
         BlockEntity be = level.getBlockEntity(pos);
-        HolderLookup.Provider regs = level.registryAccess();
 
-        if (!(be instanceof RandomizableContainerBlockEntity rcbe)) return;
+        if (!(be instanceof RandomizableContainerBlockEntity)) return;
 
         var data = PlayerChestData.get(level);
         ItemStack[] items =  data.getItemsFor(level, pos, (ServerPlayer) player);

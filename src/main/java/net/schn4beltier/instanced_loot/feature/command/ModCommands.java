@@ -6,12 +6,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -20,9 +16,8 @@ import net.schn4beltier.instanced_loot.feature.data.PlayerChestData;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
-@EventBusSubscriber(modid = Instanced_loot.MODID) // Dein MODID
+@EventBusSubscriber(modid = Instanced_loot.MODID)
 public final class ModCommands {
 
     @SubscribeEvent
@@ -33,9 +28,7 @@ public final class ModCommands {
             Commands.literal("instancedloot")
                 .requires(src -> src.hasPermission(2))
                     .then(Commands.literal("reset")
-                            // /instancedloot reset   -> nimmt Ausführenden
                             .executes(ctx -> resetFor(ctx, List.of(ctx.getSource().getPlayerOrException())))
-                            // /instancedloot reset <player|selector>
                             .then(Commands.argument("player", EntityArgument.players())
                                     .executes(ctx -> resetFor(ctx, EntityArgument.getPlayers(ctx, "player")))
                             )
