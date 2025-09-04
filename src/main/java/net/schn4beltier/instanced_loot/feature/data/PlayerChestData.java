@@ -3,14 +3,20 @@ package net.schn4beltier.instanced_loot.feature.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 import net.schn4beltier.instanced_loot.Instanced_loot;
+import net.schn4beltier.instanced_loot.feature.logic.LogicalContainer;
+import net.schn4beltier.instanced_loot.feature.logic.LootRoller;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -50,6 +56,47 @@ public class PlayerChestData extends SavedData {
         return readInv(inv, regs);
     }
 
+    public ItemStack[] getItemsFor(ServerLevel level, BlockPos pos, ServerPlayer player) {
+        BlockEntity be = level.getBlockEntity(pos);
+                if (!(be instanceof RandomizableContainerBlockEntity rcbe)) {
+            return new ItemStack[0];
+        }
+
+        LogicalContainer lc = LogicalContainer.of(level, pos, rcbe.getBlockState(), rcbe);
+        if (lc == null) {
+            return new ItemStack[0];
+        }
+
+        String gid = lc.globalId();
+        UUID uuid = player.getUUID();
+
+        return getOrCreatePlayerLoot(
+                gid,
+                uuid.toString(),
+                () -> LootRoller.rollForPlayer(
+                        level,
+                        player,
+                        rcbe.getLootTable(),
+                        rcbe.getLootTableSeed(),
+                        lc.size(),
+                        lc.mainPos(),
+                        rcbe
+                ), level.registryAccess()
+        );
+    }
+
+    public boolean hasDataFor(ServerLevel level, BlockPos pos) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof RandomizableContainerBlockEntity rcbe))return false;
+        LogicalContainer lc = LogicalContainer.of(level, pos, rcbe.getBlockState(), rcbe);
+        if (lc == null) {
+            return false;
+        }
+        String gid = lc.globalId();
+        return data.containsKey(gid) && !data.get(gid).isEmpty();
+    }
+
+
     public void put(String containerId, String player, ItemStack[] stacks, HolderLookup.Provider regs) {
         data.computeIfAbsent(containerId, k -> new HashMap<>())
                 .put(player, writeInv(sanitize(stacks), regs));
@@ -58,6 +105,14 @@ public class PlayerChestData extends SavedData {
 
     public void remove(String containerId) {
         if (data.remove(containerId) != null) setDirty();
+    }
+
+    public void removeAllForPlayer(String player) {
+        boolean dirty = false;
+        for (var byPlayer : data.values()) {
+            if (byPlayer.remove(player) != null) dirty = true;
+        }
+        if (dirty) setDirty();
     }
 
     private static PlayerChestData fromNbt(CompoundTag cTag) {

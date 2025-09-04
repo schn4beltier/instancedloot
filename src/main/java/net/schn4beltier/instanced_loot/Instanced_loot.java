@@ -28,6 +28,10 @@ public class Instanced_loot {
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
 
+    public static void log(String message) {
+        LOGGER.info(message);
+    }
+
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
