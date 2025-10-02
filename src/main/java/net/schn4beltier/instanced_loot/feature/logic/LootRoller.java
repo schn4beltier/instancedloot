@@ -11,6 +11,7 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
+import net.schn4beltier.instanced_loot.feature.menu.LootPlacement;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +47,7 @@ public final class LootRoller {
         for (int i = 0; i < size && i < generated.size(); i++) {
             out[i] = generated.get(i).copy();
         }
-        return out;
+        return LootPlacement.distributeRandomly(generated, size, seed);
     }
 }
 
